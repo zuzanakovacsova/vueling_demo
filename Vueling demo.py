@@ -37,7 +37,7 @@ dbutils.widgets.dropdown("run_ml", "yes", ["yes", "no"])
 # MAGIC First, we need to ingest some data. We will use several data sources and you can also add your own. The main table we will use is Airline performance data. This data can be accessed from your Databricks workspace.
 # MAGIC
 # MAGIC Navigate to the "Marketplace" tab and search for "airline" products. We will be using the "Airline Performance Data" dataset.
-# MAGIC ![](/Workspace/Users/zuzana.kovacsova@databricks.com/vueling_images/Screenshot 2025-03-27 at 16.54.56.png)
+# MAGIC ![](./marketplace.png)
 # MAGIC
 # MAGIC After agreeing with the licencing terms, you can make this dataset accessible in your workspace by clicking on "Get instance access". The data will be made accessible in a catalog. 
 # MAGIC
@@ -302,7 +302,7 @@ if run_ml == "yes":
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ![](/Workspace/Users/zuzana.kovacsova@databricks.com/vueling_images/Screenshot 2025-03-27 at 19.16.50.png)
+# MAGIC ![](./dashboard.png)
 
 # COMMAND ----------
 
@@ -334,7 +334,7 @@ if run_ml == "yes":
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ![](/Workspace/Users/zuzana.kovacsova@databricks.com/vueling_images/Screenshot 2025-03-27 at 19.36.38.png)
+# MAGIC ![](./task.png)
 
 # COMMAND ----------
 
