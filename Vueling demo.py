@@ -85,7 +85,7 @@ dbutils.widgets.dropdown("run_ml", "yes", ["yes", "no"])
 
 # DBTITLE 1,Check number of records in Flights dataset
 # MAGIC %sql
-# MAGIC SELECT count(*) FROM `zuzana_k_airline_performance`.`v01`.`flights_small`;
+# MAGIC SELECT count(*) FROM `<your shared catalog>`.`v01`.`flights_small`;
 
 # COMMAND ----------
 
@@ -96,7 +96,7 @@ dbutils.widgets.dropdown("run_ml", "yes", ["yes", "no"])
 
 # DBTITLE 1,Copy data from delta sharing location
 # MAGIC %sql 
-# MAGIC CREATE OR REPLACE TABLE dbdemos_zuzana_k.airport_demo.flights_small_raw AS SELECT * from zuzana_k_airline_performance.v01.flights_small
+# MAGIC CREATE OR REPLACE TABLE <your catalog>.airport_demo.flights_small_raw AS SELECT * from <your shared catalog>.v01.flights_small
 # MAGIC TABLESAMPLE (20 PERCENT);
 
 # COMMAND ----------
@@ -122,7 +122,7 @@ dbutils.widgets.dropdown("run_ml", "yes", ["yes", "no"])
 # DBTITLE 1,Import airport code data from your workspace directory
 
 import pandas as pd
-airport_codes = pd.read_csv("/Workspace/Users/zuzana.kovacsova@databricks.com/airport-codes.csv")
+airport_codes = pd.read_csv("/Workspace/Users/<your user>/airport-codes.csv")
 airport_codes.head()
 
 
@@ -130,7 +130,7 @@ airport_codes.head()
 
 # DBTITLE 1,Save into a Delta table in your schema
 df = spark.createDataFrame(airport_codes)
-df.write.format("delta").mode("overwrite").saveAsTable("dbdemos_zuzana_k.airport_demo.airport_codes")
+df.write.format("delta").mode("overwrite").saveAsTable("<your catalog>.airport_demo.airport_codes")
 
 # COMMAND ----------
 
@@ -144,7 +144,7 @@ df.write.format("delta").mode("overwrite").saveAsTable("dbdemos_zuzana_k.airport
 
 # DBTITLE 1,Explore your data
 # MAGIC %sql
-# MAGIC SELECT DISTINCT UniqueCarrier FROM dbdemos_zuzana_k.airport_demo.flights_small_raw
+# MAGIC SELECT DISTINCT UniqueCarrier FROM <your catalog>.airport_demo.flights_small_raw
 
 # COMMAND ----------
 
@@ -160,7 +160,7 @@ df.write.format("delta").mode("overwrite").saveAsTable("dbdemos_zuzana_k.airport
 
 # DBTITLE 1,Join airline table onto flights_small table to find names of airlines
 # MAGIC %sql 
-# MAGIC CREATE OR REPLACE TABLE dbdemos_zuzana_k.airport_demo.flights_small_silver AS SELECT flight.Year, flight.Month, flight.DayofMonth, flight.DayOfWeek, flight.DepTime, flight.CRSDepTime, flight.ArrTime, flight.CRSArrTime, flight.FlightNum, flight.TailNum, flight.ActualElapsedTime, flight.CRSElapsedTime, flight.AirTime, flight.ArrDelay, flight.DepDelay, flight.Origin, flight.Dest, flight.Distance, flight.TaxiIn, flight.TaxiOut, flight.Cancelled, flight.CancellationCode, flight.Diverted, flight.IsArrDelayed, flight.IsDepDelayed, airlines.Name as airline_name from dbdemos_zuzana_k.airport_demo.flights_small_raw as flight LEFT JOIN dbdemos_zuzana_k.airport_demo.airlines as airlines
+# MAGIC CREATE OR REPLACE TABLE <your catalog>.airport_demo.flights_small_silver AS SELECT flight.Year, flight.Month, flight.DayofMonth, flight.DayOfWeek, flight.DepTime, flight.CRSDepTime, flight.ArrTime, flight.CRSArrTime, flight.FlightNum, flight.TailNum, flight.ActualElapsedTime, flight.CRSElapsedTime, flight.AirTime, flight.ArrDelay, flight.DepDelay, flight.Origin, flight.Dest, flight.Distance, flight.TaxiIn, flight.TaxiOut, flight.Cancelled, flight.CancellationCode, flight.Diverted, flight.IsArrDelayed, flight.IsDepDelayed, airlines.Name as airline_name from <your catalog>.airport_demo.flights_small_raw as flight LEFT JOIN <your catalog>.airport_demo.airlines as airlines
 # MAGIC ON flight.UniqueCarrier = airlines.IATA;
 # MAGIC
 
@@ -173,7 +173,7 @@ df.write.format("delta").mode("overwrite").saveAsTable("dbdemos_zuzana_k.airport
 
 # DBTITLE 1,Create smaller table for AutoML experiment
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE TABLE dbdemos_zuzana_k.airport_demo.flights_small_training_data AS SELECT * FROM dbdemos_zuzana_k.airport_demo.flights_small_silver TABLESAMPLE (30 PERCENT)
+# MAGIC CREATE OR REPLACE TABLE <your catalog>.airport_demo.flights_small_training_data AS SELECT * FROM <your catalog>.airport_demo.flights_small_silver TABLESAMPLE (30 PERCENT)
 
 # COMMAND ----------
 
@@ -184,17 +184,17 @@ df.write.format("delta").mode("overwrite").saveAsTable("dbdemos_zuzana_k.airport
 
 # DBTITLE 1,Create Golden table with some aggregations
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE TABLE dbdemos_zuzana_k.airport_demo.airline_performance
+# MAGIC CREATE OR REPLACE TABLE <your catalog>.airport_demo.airline_performance
 # MAGIC AS 
 # MAGIC SELECT airline_name, count(IsArrDelayed) as number_of_flights, count(IsArrDelayed) FILTER (WHERE IsArrDelayed = 'YES') as delayed_flights, delayed_flights/number_of_flights*100 as delay_percentage
-# MAGIC from dbdemos_zuzana_k.airport_demo.flights_small_silver
+# MAGIC from <your catalog>.airport_demo.flights_small_silver
 # MAGIC GROUP BY airline_name; 
 
 # COMMAND ----------
 
 # DBTITLE 1,Our aggregated table
 # MAGIC %sql
-# MAGIC SELECT * FROM dbdemos_zuzana_k.airport_demo.airline_performance;
+# MAGIC SELECT * FROM <your catalog>.airport_demo.airline_performance;
 
 # COMMAND ----------
 
@@ -207,20 +207,20 @@ df.write.format("delta").mode("overwrite").saveAsTable("dbdemos_zuzana_k.airport
 
 # DBTITLE 1,Create a simple function to look up airport codes
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE FUNCTION dbdemos_zuzana_k.airport_demo.lookup_airport_name(airport_code STRING)
+# MAGIC CREATE OR REPLACE FUNCTION <your catalog>.airport_demo.lookup_airport_name(airport_code STRING)
 # MAGIC RETURNS STRING
 # MAGIC COMMENT 'This function looks up the provided airport code and returns the name of the airport.'
 # MAGIC LANGUAGE SQL
 # MAGIC RETURN
 # MAGIC SELECT MAX(name)
-# MAGIC FROM dbdemos_zuzana_k.airport_demo.airport_codes
+# MAGIC FROM <your catalog>.airport_demo.airport_codes
 # MAGIC WHERE iata_code = airport_code;
 
 # COMMAND ----------
 
 # DBTITLE 1,Apply the function to a column
 # MAGIC %sql
-# MAGIC SELECT Origin, dbdemos_zuzana_k.airport_demo.lookup_airport_name(Origin) as decoded_origin from dbdemos_zuzana_k.airport_demo.flights_small_silver
+# MAGIC SELECT Origin, <your catalog>.airport_demo.lookup_airport_name(Origin) as decoded_origin from <your catalog>.airport_demo.flights_small_silver
 # MAGIC limit 5;
 
 # COMMAND ----------
@@ -260,7 +260,7 @@ import mlflow
 if run_ml == "yes":
   client = MlflowClient()
   # replace with the name of your model
-  model_version_uri = "models:/dbdemos_zuzana_k.airport_demo.predict_aircraft_delay@champion"
+  model_version_uri = "models:/<your catalog>.airport_demo.predict_aircraft_delay@champion"
   model = mlflow.pyfunc.load_model(model_version_uri)
   # Example input features
   import pandas as pd 
